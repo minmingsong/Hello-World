@@ -39,6 +39,7 @@ public class Role extends Entity
 	protected void init()
 	{
 		pic = BitmapFactory.decodeResource(context.getResources(), R.drawable.forg);
+//		pic = Bitmap.createScaledBitmap(pic, 10, 10, true);
 		Height = pic.getHeight();
 		Width = pic.getWidth();
 

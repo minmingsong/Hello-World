@@ -26,6 +26,9 @@ public class GameView extends SurfaceView implements Callback, Runnable
 
 	private Bitmap Bgmap;
 	private Bitmap overlap;
+	private static final int CONSTANT = 10;
+	private static int checkX = 10;
+	private static int checkY = 10;
 
 	private int mapY = 0;
 
@@ -68,7 +71,6 @@ public class GameView extends SurfaceView implements Callback, Runnable
 	@Override
 	public void surfaceChanged(SurfaceHolder holder, int format, int width, int height)
 	{
-		// TODO ×Ô¶¯Éú³ÉµÄ·½·¨´æ¸ù
 
 	}
 
@@ -124,8 +126,8 @@ public class GameView extends SurfaceView implements Callback, Runnable
 		{
 			case MotionEvent.ACTION_DOWN:
 
-				System.out.println("´¥Ãş" + event.getPointerCount());
-				System.out.println("´¥ÃşÊÂ¼ş£¡");
+				System.out.println("å•æŒ‡è§¦æ‘¸ï¼Œè§¦æ‘¸ç‚¹æ•°ï¼š" + event.getPointerCount());
+
 				touched = true;
 				if (event.getX() < screenW / 2)
 				{
@@ -149,7 +151,7 @@ public class GameView extends SurfaceView implements Callback, Runnable
 
 				role.setHspeed(5);
 				touched = false;
-				System.out.println("µ¥µãÊÍ·Å£¡");
+				System.out.println("å•åªé‡Šæ”¾");
 				break;
 
 			default:
@@ -202,14 +204,18 @@ public class GameView extends SurfaceView implements Callback, Runnable
 	{
 		if ((role.right > wall.left && role.left < wall.right) && (role.bottom > wall.top && role.top < wall.bottom))
 		{
-			if (role.left < wall.left && role.bottom > wall.bottom)
+			checkX = ((role.right - wall.left) > CONSTANT) ? CONSTANT : (role.right - wall.left);
+			if (role.left < wall.left && role.top < wall.top)
 			{
-				overlap = Bitmap.createBitmap(role.pic, role.Width - (role.right - wall.left), 0,
-						role.right - wall.left, wall.bottom - role.top);
-			} else if (role.left < wall.left && role.bottom > wall.bottom && role.top < wall.top)
-			{
+
+				checkY = ((role.bottom - wall.bottom) > CONSTANT) ? CONSTANT : (role.bottom - wall.bottom);
 				overlap = Bitmap.createBitmap(role.pic, role.Width - (role.right - wall.left),
-						role.Height - (role.bottom - wall.bottom), role.right - wall.left, role.bottom - wall.bottom);
+						role.Height - (role.bottom - wall.bottom), checkX, checkY);
+			} else if (role.left < wall.left && role.bottom > wall.bottom)
+			{
+				checkY = ((wall.bottom - role.bottom) > CONSTANT) ? CONSTANT : (wall.bottom - role.bottom);
+				overlap = Bitmap.createBitmap(role.pic, role.Width - (role.right - wall.left),
+						((wall.bottom - role.bottom) > CONSTANT) ? (wall.bottom - role.top - CONSTANT) : 0, checkX, checkY);
 			}
 			int[] pixels = new int[overlap.getWidth() * overlap.getHeight()];
 			overlap.getPixels(pixels, 0, overlap.getWidth(), 0, 0, overlap.getWidth(), overlap.getHeight());
@@ -218,20 +224,21 @@ public class GameView extends SurfaceView implements Callback, Runnable
 			{
 				int clr = pixels[i];
 				// int alpha = (clr & 0xff000000)>>24;
-				int red = (clr & 0x00ff0000) >> 16; // È¡¸ßÁ½Î»
-				int green = (clr & 0x0000ff00) >> 8; // È¡ÖĞÁ½Î»
-				int blue = clr & 0x000000ff; // È¡µÍÁ½Î»
+				int red = (clr & 0x00ff0000) >> 16; // å³ç§»å¾—åˆ°REDå€¼
+				int green = (clr & 0x0000ff00) >> 8; // å¾—åˆ°GREENå€¼
+				int blue = clr & 0x000000ff; // å¾—åˆ°BLUEå€¼
 				System.out.println("r=" + red + ",g=" + green + ",b=" + blue);
 				// if (red != 255 || green != 255 || blue != 255)
 				// {
 				// Dead = true;
 				// }
-				if (red == 0 && green == 0 && blue == 0)
-				{
-					continue;
-				} else
+				if (red != 0 || green != 0 || blue != 0)
 				{
 					Dead = true;
+
+				} else
+				{
+					continue;
 				}
 			}
 		} else
