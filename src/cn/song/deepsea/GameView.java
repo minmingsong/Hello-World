@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceHolder.Callback;
@@ -14,9 +15,9 @@ import android.view.SurfaceView;
 public class GameView extends SurfaceView implements Callback, Runnable
 {
 
-	public static final int speed = 15;
-	// private float textX = 20;
-	// private float textY = 20;
+	public static int speed = 15;
+	private static int T = 70;
+	private int argb = 0;
 	public static int screenH;
 	public static int screenW;
 	private SurfaceHolder sh;
@@ -25,20 +26,15 @@ public class GameView extends SurfaceView implements Callback, Runnable
 	private Thread thread;
 
 	private Bitmap Bgmap;
-	private Bitmap overlap;
-	private static final int CONSTANT = 10;
-	private static int checkX = 10;
-	private static int checkY = 10;
-
 	private int mapY = 0;
-
 	int tochX = 0;
 	public static boolean touched = false;
 	private boolean Dead = false;
-
 	private Context context;
 	private Wall wall;
 	private Role role;
+	
+	public static Rect[] walls;
 
 	public GameView(Context context)
 	{
@@ -53,6 +49,8 @@ public class GameView extends SurfaceView implements Callback, Runnable
 		this.setFocusable(true);
 
 		Bgmap = BitmapFactory.decodeResource(getResources(), R.drawable.bg);
+		
+		
 
 	}
 
@@ -62,8 +60,15 @@ public class GameView extends SurfaceView implements Callback, Runnable
 
 		screenW = this.getWidth();
 		screenH = this.getHeight();
+		walls = new Rect[screenH / 300 +1];
+		
 		wall = new Wall(context);
 		role = new Role(context);
+		walls[0] = new Rect(wall.rect);
+		for (int i = 1; i < walls.length; i++)
+		{
+			walls[i] = new Rect(walls[i-1].left, walls[i-1].top + 300, walls[i-1].right, walls[i-1].bottom + 300);
+		}
 		thread = new Thread(this);
 		thread.start();
 	}
@@ -92,11 +97,11 @@ public class GameView extends SurfaceView implements Callback, Runnable
 			Draw();
 			long endTime = System.currentTimeMillis();
 
-			if (endTime - startTime < 50)
+			if (endTime - startTime < T)
 			{
 				try
 				{
-					Thread.sleep(50 - (endTime - startTime));
+					Thread.sleep(T - (endTime - startTime));
 				} catch (InterruptedException e)
 				{
 					e.printStackTrace();
@@ -180,6 +185,7 @@ public class GameView extends SurfaceView implements Callback, Runnable
 				}
 				wall.Draw(canvas);
 				role.Draw(canvas);
+//				canvas.drawText(argb + " ", 200, 400, paint);
 				if (Dead)
 				{
 					canvas.drawText("GameOver", 40, 100, paint);
@@ -202,49 +208,64 @@ public class GameView extends SurfaceView implements Callback, Runnable
 
 	private void checkdead()
 	{
-		if ((role.right > wall.left && role.left < wall.right) && (role.bottom > wall.top && role.top < wall.bottom))
+		// if ((role.right > wall.left && role.left < wall.right) &&
+		// (role.bottom > wall.top && role.top < wall.bottom)) //最初的直接检测碰撞的表达式
+
+		if (isCollsion(role.rect,wall.rect))
 		{
-			checkX = ((role.right - wall.left) > CONSTANT) ? CONSTANT : (role.right - wall.left);
-			if (role.left < wall.left && role.top < wall.top)
+			// if (role.top <= wall.top && role.left <=wall.left) {
+			if (role.middle < wall.rect.top)
 			{
-
-				checkY = ((role.bottom - wall.bottom) > CONSTANT) ? CONSTANT : (role.bottom - wall.bottom);
-				overlap = Bitmap.createBitmap(role.pic, role.Width - (role.right - wall.left),
-						role.Height - (role.bottom - wall.bottom), checkX, checkY);
-			} else if (role.left < wall.left && role.bottom > wall.bottom)
-			{
-				checkY = ((wall.bottom - role.bottom) > CONSTANT) ? CONSTANT : (wall.bottom - role.bottom);
-				overlap = Bitmap.createBitmap(role.pic, role.Width - (role.right - wall.left),
-						((wall.bottom - role.bottom) > CONSTANT) ? (wall.bottom - role.top - CONSTANT) : 0, checkX, checkY);
-			}
-			int[] pixels = new int[overlap.getWidth() * overlap.getHeight()];
-			overlap.getPixels(pixels, 0, overlap.getWidth(), 0, 0, overlap.getWidth(), overlap.getHeight());
-
-			for (int i = 0; i < pixels.length; i++)
-			{
-				int clr = pixels[i];
-				// int alpha = (clr & 0xff000000)>>24;
-				int red = (clr & 0x00ff0000) >> 16; // 右移得到RED值
-				int green = (clr & 0x0000ff00) >> 8; // 得到GREEN值
-				int blue = clr & 0x000000ff; // 得到BLUE值
-				System.out.println("r=" + red + ",g=" + green + ",b=" + blue);
-				// if (red != 255 || green != 255 || blue != 255)
-				// {
-				// Dead = true;
-				// }
-				if (red != 0 || green != 0 || blue != 0)
+				if (role.rect.left <= wall.rect.left)
 				{
-					Dead = true;
-
-				} else
-				{
-					continue;
+					argb = role.pic.getPixel(role.Width - (role.rect.right - wall.rect.left),
+							role.Height - (role.rect.bottom - wall.rect.top));
 				}
 			}
-		} else
-		{
-			Dead = false;
+			if (role.middle > wall.rect.top && role.middle < wall.rect.bottom)
+			{
+				if (role.rect.right > wall.rect.left)
+				{
+					Dead = true;
+					return;
+				}
+			}
+			if (role.middle > wall.rect.bottom)
+			{
+				if (role.rect.left <= wall.rect.left)
+				{
+					argb = role.pic.getPixel(role.Width - (role.rect.right - wall.rect.left), wall.rect.bottom - role.rect.top);
+				}
+			}
+			//
+
+			if (argb != 0) // 检测wall左上角对应在forg图片内的像素值，不为0，即碰撞
+			{
+				Dead = true;
+			}
 		}
 	}
 
+	private boolean isCollsion(Rect role,Rect wall)
+	{
+		if (wall.top < role.top && wall.bottom < role.top)
+		{
+
+		} else if (wall.left < role.left && wall.right < role.left)
+		{
+
+		} else if (wall.left > role.left && wall.left > role.right)
+		{
+
+		} else if (wall.top+2 > role.top && wall.top+2 > role.bottom)
+		{
+
+		} else
+		{
+			Dead = true;
+			return true;
+		}
+		argb = 0;
+		return false;
+	}
 }

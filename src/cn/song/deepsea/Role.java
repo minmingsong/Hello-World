@@ -4,8 +4,8 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
 
 public class Role extends Entity
 {
@@ -16,11 +16,9 @@ public class Role extends Entity
 
 	public int Width;
 	public int Height;
-	int left;
 
-	int top;
-	int right;
-	int bottom;
+	Rect rect;
+	int middle;
 	private int Hspeed;
 
 	public void setHspeed(int hspeed)
@@ -39,14 +37,12 @@ public class Role extends Entity
 	protected void init()
 	{
 		pic = BitmapFactory.decodeResource(context.getResources(), R.drawable.forg);
-//		pic = Bitmap.createScaledBitmap(pic, 10, 10, true);
+		// pic = Bitmap.createScaledBitmap(pic, 10, 10, true);
 		Height = pic.getHeight();
 		Width = pic.getWidth();
 
-		left = 20;
-		top = 500;
-		right = left + Width;
-		bottom = top + Height;
+		rect = new Rect(0, 500, this.Width, 500 + this.Height);
+		middle = this.rect.top + this.Height / 2;
 		paint = new Paint();
 		paint.setAntiAlias(true);
 		paint.setTextSize(50);
@@ -57,7 +53,7 @@ public class Role extends Entity
 	protected void Draw(Canvas canvas)
 	{
 		move();
-		canvas.drawBitmap(pic, left, 500, paint);
+		canvas.drawBitmap(pic, rect.left, rect.top, paint);
 		// paint.setColor(Color.RED);
 		// canvas.drawRect(left, top, right, bottom, paint);
 		// canvas.drawText(left+""+top+""+right+""+bottom +""+ "",50, 80,
@@ -74,15 +70,15 @@ public class Role extends Entity
 			else
 				Hspeed -= 2;
 
-			left += Hspeed;
+			rect.left += Hspeed;
+			rect.right = rect.right + this.Width;
 		}
-		right = left + Width;
-		if (right > GameView.screenW)
+		if (rect.right > GameView.screenW)
 		{
-			left = GameView.screenW - Width;
-		} else if (left < 0)
+			rect.left = GameView.screenW - Width;
+		} else if (rect.left < 0)
 		{
-			left = 0;
+			rect.left = 0;
 		}
 	}
 
