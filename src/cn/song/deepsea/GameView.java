@@ -35,6 +35,8 @@ public class GameView extends SurfaceView implements Callback, Runnable
 	private Role role;
 	
 	public static Rect[] walls;
+	
+	int X,Y;
 
 	public GameView(Context context)
 	{
@@ -127,16 +129,19 @@ public class GameView extends SurfaceView implements Callback, Runnable
 	public boolean onTouchEvent(MotionEvent event)
 	{
 
-		switch (event.getAction() & MotionEvent.ACTION_MASK)
+		switch (event.getAction())
 		{
 			case MotionEvent.ACTION_DOWN:
 
+				X = (int) event.getX();
+				Y = (int) event.getY();
 				System.out.println("单指触摸，触摸点数：" + event.getPointerCount());
 
 				touched = true;
 				if (event.getX() < screenW / 2)
 				{
 					role.setHspeed(-5);
+					System.out.println("执行到触摸");
 
 				} else
 				{
@@ -147,15 +152,29 @@ public class GameView extends SurfaceView implements Callback, Runnable
 					Dead = false;
 					new Thread(this).start();
 				}
-				return true;
-			case MotionEvent.ACTION_POINTER_DOWN:
-
-				touched = false;
-				break;
+//				return true;
+//			case MotionEvent.ACTION_POINTER_DOWN:
+//
+//				touched = false;
+//				if (event.getX(1) < screenW / 2)
+//				{
+//					role.setHspeed(-5);
+//
+//				} else
+//				{
+//					role.setHspeed(5);
+//				}
+//				
+//				break;
+//				return super.onTouchEvent(event);
+//			case MotionEvent.ACTION_POINTER_UP:
+//				role.setHspeed(5);
+//				return super.onTouchEvent(event);
+//				break;
 			case MotionEvent.ACTION_UP:
 
-				role.setHspeed(5);
 				touched = false;
+				role.setHspeed(5);
 				System.out.println("单只释放");
 				break;
 
@@ -163,6 +182,7 @@ public class GameView extends SurfaceView implements Callback, Runnable
 				break;
 		}
 
+//		return true;
 		return super.onTouchEvent(event);
 	}
 
@@ -185,7 +205,7 @@ public class GameView extends SurfaceView implements Callback, Runnable
 				}
 				wall.Draw(canvas);
 				role.Draw(canvas);
-//				canvas.drawText(argb + " ", 200, 400, paint);
+				canvas.drawText(X + "   "+Y, 200, 400, paint);
 				if (Dead)
 				{
 					canvas.drawText("GameOver", 40, 100, paint);
