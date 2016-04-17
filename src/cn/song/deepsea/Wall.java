@@ -46,17 +46,17 @@ public class Wall extends Entity
 	{
 		move();
 //		canvas.drawBitmap(pic, left = GameView.screenW - pic.getWidth(), top, paint);
-//		for (Rect wall : GameView.walls)
-//		{
-//			canvas.drawBitmap(pic, wall.left, wall.top, paint);
-//			canvas.drawText("", wall.left, wall.top, paint);
-//		}
-		for (int i = 0; i < GameView.walls.length; i++)
+		for (Rect wall : GameView.walls)
 		{
-			canvas.drawBitmap(pic, null,GameView.walls[i], paint);
-			canvas.drawText("index： "+ i, GameView.walls[i].left-20, GameView.walls[i].top, paint);
-			
+			canvas.drawBitmap(pic, wall.left, wall.top, paint);
+//			canvas.drawText("", wall.left, wall.top, paint);
 		}
+//		for (int i = 0; i < GameView.walls.length; i++)
+//		{
+//			canvas.drawBitmap(pic, null,GameView.walls[i], paint);
+//			canvas.drawText("index： "+ i, GameView.walls[i].left-20, GameView.walls[i].top, paint);
+//			
+//		}//This code snippet used to display the Rect's info that closest role;
 
 	}
 
