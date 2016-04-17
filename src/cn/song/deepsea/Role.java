@@ -1,7 +1,6 @@
 package cn.song.deepsea;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -9,10 +8,9 @@ import android.graphics.Rect;
 
 public class Role extends Entity
 {
-	Context context;
-	public Bitmap pic;
+//	public Bitmap pic;
 
-	private Paint paint = null;
+//	private Paint paint = null;
 
 	public int Width;
 	public int Height;
@@ -20,7 +18,7 @@ public class Role extends Entity
 	private final int X=10;
 	private final int Y=550;
 
-	Rect rect;
+//	Rect rect;
 	int middle;
 	private int Hspeed;
 
@@ -31,8 +29,7 @@ public class Role extends Entity
 
 	public Role(Context context)
 	{
-		super();
-		this.context = context;
+		super(context);
 		init();
 	}
 
@@ -45,7 +42,7 @@ public class Role extends Entity
 		Width = pic.getWidth();
 
 		rect = new Rect(X, Y, this.Width + X, Y + this.Height);
-		middle = this.rect.top + this.Height / 2;
+		middle = rect.centerY();
 		paint = new Paint();
 		paint.setAntiAlias(true);
 		paint.setTextSize(50);
