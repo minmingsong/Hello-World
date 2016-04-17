@@ -122,14 +122,14 @@ public class GameView extends SurfaceView implements Callback, Runnable
 			mapY = Bgmap.getHeight() + mapY;
 		}
 
-		checkdead();
+//		checkdead();
 	}
 
 	@Override
 	public boolean onTouchEvent(MotionEvent event)
 	{
 
-		switch (event.getAction())
+		switch (event.getAction() & MotionEvent.ACTION_MASK)
 		{
 			case MotionEvent.ACTION_DOWN:
 
@@ -152,25 +152,26 @@ public class GameView extends SurfaceView implements Callback, Runnable
 					Dead = false;
 					new Thread(this).start();
 				}
+				break;
 //				return true;
-//			case MotionEvent.ACTION_POINTER_DOWN:
-//
+			case MotionEvent.ACTION_POINTER_DOWN:
+
 //				touched = false;
-//				if (event.getX(1) < screenW / 2)
-//				{
-//					role.setHspeed(-5);
-//
-//				} else
-//				{
-//					role.setHspeed(5);
-//				}
-//				
-//				break;
+				if (event.getX(event.getActionIndex()) < screenW / 2)//event.getActionIndex()  检测触发这次事件的索引值
+				{
+					role.setHspeed(-5);
+
+				} else
+				{
+					role.setHspeed(5);
+				}
+				
+				break;
 //				return super.onTouchEvent(event);
-//			case MotionEvent.ACTION_POINTER_UP:
+			case MotionEvent.ACTION_POINTER_UP:
+//				touched = false;
 //				role.setHspeed(5);
-//				return super.onTouchEvent(event);
-//				break;
+				break;
 			case MotionEvent.ACTION_UP:
 
 				touched = false;
@@ -182,8 +183,8 @@ public class GameView extends SurfaceView implements Callback, Runnable
 				break;
 		}
 
-//		return true;
-		return super.onTouchEvent(event);
+		return true;
+//		return super.onTouchEvent(event);
 	}
 
 	private void Draw()

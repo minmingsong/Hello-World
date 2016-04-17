@@ -16,6 +16,9 @@ public class Role extends Entity
 
 	public int Width;
 	public int Height;
+	
+	private final int X=10;
+	private final int Y=550;
 
 	Rect rect;
 	int middle;
@@ -41,7 +44,7 @@ public class Role extends Entity
 		Height = pic.getHeight();
 		Width = pic.getWidth();
 
-		rect = new Rect(10, 550, this.Width+10, 500 + this.Height);
+		rect = new Rect(X, Y, this.Width + X, Y + this.Height);
 		middle = this.rect.top + this.Height / 2;
 		paint = new Paint();
 		paint.setAntiAlias(true);
@@ -54,6 +57,7 @@ public class Role extends Entity
 	{
 		move();
 		canvas.drawBitmap(pic, null, rect, paint);
+//		canvas.drawRect(rect, paint);
 		// paint.setColor(Color.RED);
 		// canvas.drawRect(left, top, right, bottom, paint);
 		// canvas.drawText(left+""+top+""+right+""+bottom +""+ "",50, 80,
@@ -63,7 +67,7 @@ public class Role extends Entity
 	@Override
 	public void move()
 	{
-		if (GameView.touched)
+		if (GameView.touched && rect.right <= GameView.screenW && rect.left >= 0)
 		{
 			if (Hspeed >= 0)
 				Hspeed += 2;
@@ -72,15 +76,16 @@ public class Role extends Entity
 
 			rect.left += Hspeed;
 			rect.right = rect.left + this.Width;
-		}
-		if (rect.right > GameView.screenW)
+		} else if (rect.right > GameView.screenW)
 		{
-			GameView.touched = false;
+			 GameView.touched = false;
 			rect.right = GameView.screenW;
+			rect.left = rect.right - this.Width;
 		} else if (rect.left < 0)
 		{
-			GameView.touched = false;
+			 GameView.touched = false;
 			rect.left = 0;
+			rect.right = rect.left + this.Width;
 		}
 	}
 
