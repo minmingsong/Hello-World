@@ -7,41 +7,42 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceHolder.Callback;
 import android.view.SurfaceView;
+import cn.song.deepsea.Wall.WallRect;
 
 public class GameView extends SurfaceView implements Callback, Runnable
 {
-
+	private final String tag = "GameView";
 	private Context context;
 	public static int speed = 10;
-	private static int T = 50;
-	
+	private static int T = 40; //画面的更新周期
+
 	public static int screenH;
 	public static int screenW;
 	private SurfaceHolder sh;
 	private Paint paint;
 	private Canvas canvas;
-	private Thread thread;
 
 	private Bitmap[] Bgmap = new Bitmap[2];
 	private int argb = 0;
 
-	Rect rect;
-	int tochX = 0;
+	Rect rect;				//Bgmap的矩形
+	Rect SCREENRECT;		//屏幕的矩形
+	int tochX = 0;			//触摸点的X值
 	public static boolean touched = false;
 
-	
 	private Wall wall;
 	private Role role;
 	private GameMenu menu;
 
-	public static Rect[] walls;
+	
 
-	private boolean Dead = false;
-	private boolean Pause = false;
+	public static boolean Dead = false;
+	public static boolean Pause = false;
 
 	public static enum CHANGE
 	{
@@ -49,6 +50,7 @@ public class GameView extends SurfaceView implements Callback, Runnable
 	};
 
 	CHANGE changebg = CHANGE.NO;
+	public boolean continuerun = false;
 
 	public GameView(Context context)
 	{
@@ -56,94 +58,79 @@ public class GameView extends SurfaceView implements Callback, Runnable
 		this.context = context;
 		sh = this.getHolder();
 		sh.addCallback(this);
+		Bgmap[0] = BitmapFactory.decodeResource(getResources(), R.drawable.bg);
+		Bgmap[1] = BitmapFactory.decodeResource(getResources(), R.drawable.bg2);
+		init();
+	}
+
+	public void init()
+	{
 		paint = new Paint();
 		paint.setColor(Color.CYAN);
 		paint.setAntiAlias(true);
 		paint.setTextSize(50);
 		this.setFocusable(true);
-
-		Bgmap[0] = BitmapFactory.decodeResource(getResources(), R.drawable.bg);
-		Bgmap[1] = BitmapFactory.decodeResource(getResources(), R.drawable.bg2);
 		rect = new Rect();
-
-	}
-
-	@Override
-	public void surfaceCreated(SurfaceHolder holder)
-	{
-
-		screenW = this.getWidth();
-		screenH = this.getHeight();
-		rect.left = 0;
-		rect.top = 0;
-		rect.right = screenW;
-		rect.bottom = Bgmap[0].getHeight();
-		walls = new Rect[screenH / 300 + 1];
-
-		wall = new Wall(context);
-		role = new Role(context);
-		menu = new GameMenu(context);
-		walls[0] = new Rect(wall.rect);
-		for (int i = 1; i < walls.length; i++)
-		{
-			walls[i] = new Rect(walls[i - 1].left, walls[i - 1].top + 300, walls[i - 1].right,
-					walls[i - 1].bottom + 300);
-		}
-		thread = new Thread(this);
-		thread.start();
-	}
-
-	@Override
-	public void surfaceChanged(SurfaceHolder holder, int format, int width, int height)
-	{
-
-	}
-
-	@Override
-	public void surfaceDestroyed(SurfaceHolder holder)
-	{
-
 		Dead = false;
+		Pause = false;
+	}
+
+	public void reset()
+	{
+		this.init();
+		wall.init();
+		role.init();
+		menu.init();
 	}
 
 	@Override
 	public void run()
 	{
-
-		while (!Dead && !Pause)
+		// try
+		// {
+		// Thread.sleep(3000);
+		// } catch (InterruptedException e1)
+		// {
+		// }
+		try
 		{
-			long startTime = System.currentTimeMillis();
-			move();
-			Draw();
-			long endTime = System.currentTimeMillis();
-
-			if (endTime - startTime < T)
+			while (true)
 			{
-				try
+				System.out.println("正常运转!");
+				while (!Dead)
 				{
-					Thread.sleep(T - (endTime - startTime));
-				} catch (InterruptedException e)
-				{
-					e.printStackTrace();
+					while (!Pause)
+					{
+						if (continuerun)
+						{
+							continuerun = false;
+						}
+						long startTime = System.currentTimeMillis();
+						move();
+						Draw();
+						long endTime = System.currentTimeMillis();
+
+						if (endTime - startTime < T)
+						{
+							Thread.sleep(T - (endTime - startTime));
+						}
+					}
+					// Draw();
 				}
+
+				Draw();
+				// reset();
+				if (continuerun)
+				{
+					reset();
+				}
+				Thread.sleep(500);
 			}
-
-		}
-		if (Dead)
-			wall.score = 0;
-	}
-
-	private void move()
-	{
-
-		rect.top -= speed;
-		if (rect.top <= -Bgmap[0].getHeight())
+		} catch (InterruptedException e)
 		{
-			rect.top = Bgmap[0].getHeight() + rect.top;
-			changebg = CHANGE.YES; // 第一张图片超出屏幕之后就改为只画第二张
+			// e.printStackTrace();
+			Log.e(tag, "对不起,程序睡眠失常了");
 		}
-
-		checkdead();
 	}
 
 	@Override
@@ -154,45 +141,22 @@ public class GameView extends SurfaceView implements Callback, Runnable
 		{
 			case MotionEvent.ACTION_DOWN:
 
-				// X = (int) event.getX();
-				// Y = (int) event.getY();
 				if (menu.rect.contains((int) event.getX(), (int) event.getY()))
 				{
-					if (Pause)
+					if (!Pause)
 					{
-						Pause = false;
-						new Thread(this).start();
-					} else
-					{
-						Bitmap pause = BitmapFactory.decodeResource(getResources(), R.drawable.poppause);
 						Pause = true;
-						canvas = sh.lockCanvas();
-						canvas.drawBitmap(pause, null, new Rect(0, 200, screenW, screenH - 100), paint);
-						if (canvas != null)
-						{
-							sh.unlockCanvasAndPost(canvas);
-						}
-
 					}
 					break;
 				}
-				// System.out.println("单指触摸，触摸点数：" + event.getPointerCount());
-
 				touched = true;
 				if (event.getX() < screenW / 2)
 				{
 					role.setHspeed(-5);
-//					System.out.println("执行到触摸");
-
 				} else
 				{
 					role.setHspeed(5);
 				}
-				// if (Dead)
-				// {
-				// Dead = false;
-				// new Thread(this).start();
-				// }
 				break;
 			case MotionEvent.ACTION_POINTER_DOWN:
 
@@ -207,18 +171,12 @@ public class GameView extends SurfaceView implements Callback, Runnable
 				}
 
 				break;
-			// return super.onTouchEvent(event);
 			case MotionEvent.ACTION_POINTER_UP:
-				// touched = false;
-				// role.setHspeed(5);
 				break;
 			case MotionEvent.ACTION_UP:
-
 				touched = false;
 				role.setHspeed(5);
-				// System.out.println("单只释放");
 				break;
-
 			default:
 				break;
 		}
@@ -235,47 +193,32 @@ public class GameView extends SurfaceView implements Callback, Runnable
 
 			if (canvas != null)
 			{
-				//只有一张背景图的画法
-				// if (rect.top >= screenH - Bgmap[bitmapIndex].getHeight())
-				// {
-				// canvas.drawBitmap(Bgmap[bitmapIndex], 0, rect.top, paint);
-				// } else
-				// {
-				// canvas.drawBitmap(Bgmap[bitmapIndex], 0, rect.top, paint);
-				// canvas.drawBitmap(Bgmap[bitmapIndex], 0, rect.top +
-				// Bgmap[bitmapIndex].getHeight(), paint);
-				// }
 				switch (changebg)
 				{
 					case NO:
 
 						canvas.drawBitmap(Bgmap[0], 0, rect.top, paint);
-						canvas.drawBitmap(Bgmap[1], 0, rect.top + Bgmap[1].getHeight(), paint);
+						canvas.drawBitmap(Bgmap[1], 0, rect.top + Bgmap[0].getHeight(), paint);
 						break;
 
 					case YES:
 
-						canvas.drawBitmap(Bgmap[1], 0, rect.top, paint);
-						canvas.drawBitmap(Bgmap[1], 0, rect.top + Bgmap[1].getHeight(), paint);
+						// canvas.drawBitmap(Bgmap[1], 0, rect.top, paint);
+						// canvas.drawBitmap(Bgmap[1], 0, rect.top +
+						// Bgmap[1].getHeight(), paint);
+						canvas.drawBitmap(Bgmap[1], null, SCREENRECT, paint);
 						break;
 					default:
 						break;
 				}
-				wall.Draw(canvas);
-
-				role.Draw(canvas);
-				// canvas.drawText(X + " "+Y, 200, 400, paint); //画出触摸点的坐标
-				if (Dead)
+				if (!Dead && !Pause)
 				{
-					Bitmap pause = BitmapFactory.decodeResource(getResources(), R.drawable.over);
-					canvas.drawBitmap(pause, null, new Rect(50, 100, screenW - 50, screenH - 200), paint);
-					canvas.drawText(wall.score + "！", 230, 240 + 70, paint);
-				} else
-				{
-					if (!Pause)
-					menu.Draw(canvas);
+					wall.move();
+					role.move();
 				}
-
+				wall.Draw(canvas);
+				role.Draw(canvas);
+				menu.Draw(canvas);
 			}
 		} catch (Exception e)
 		{
@@ -287,70 +230,163 @@ public class GameView extends SurfaceView implements Callback, Runnable
 				sh.unlockCanvasAndPost(canvas);
 			}
 		}
+		checkdead();
+	}
+
+	private void move()
+	{
+
+		rect.top -= speed;
+		if (changebg != CHANGE.YES)
+		{
+			if (rect.top <= -Bgmap[0].getHeight())
+			{
+				rect.top = Bgmap[0].getHeight() + rect.top;
+				changebg = CHANGE.YES; // 第一张图片超出屏幕之后就改为只画第二张
+			}
+		}
+		else {
+			SCREENRECT.top = 0;
+			SCREENRECT.left = 0;
+			SCREENRECT.bottom = SCREENRECT.top + this.getHeight();
+		}
 
 	}
 
 	private void checkdead()
 	{
-		// if ((role.right > wall.left && role.left < wall.right) &&
-		// (role.bottom > wall.top && role.top < wall.bottom)) //最初的直接检测碰撞的表达式
 
-		if (isCollsion(role.rect, wall.rect))
+		
+		if (wall.tempRect.flag == WallRect.DL)
 		{
-			// if (role.top <= wall.top && role.left <=wall.left) {
-			if (role.middle < wall.rect.top)
-			{
-				if (role.rect.left <= wall.rect.left)
-				{
-					argb = role.pic.getPixel(role.Width - (role.rect.right - wall.rect.left),
-							role.Height - (role.rect.bottom - wall.rect.top));
-				}
+			if (isCollsion(role.rect, wall.tempRect.rectl)) {
+				
 			}
-			if (role.middle > wall.rect.top && role.middle < wall.rect.bottom)
-			{
-				if (role.rect.right > wall.rect.left)
-				{
-					Dead = true;
-					return;
-				}
-			}
-			if (role.middle > wall.rect.bottom)
-			{
-				if (role.rect.left <= wall.rect.left)
-				{
-					argb = role.pic.getPixel(role.Width - (role.rect.right - wall.rect.left),
-							wall.rect.bottom - role.rect.top);
-				}
-			}
-			//
+		}
+		
+		
+		if (isCollsion(role.rect, wall.tempRect.rectl))
+		{
+			
+			checkDead(wall.tempRect.rectl);
+		}
+	}
 
-			if (argb != 0) // 检测wall左上角对应在forg图片内的像素值，不为0，即碰撞
+	/**
+	 * @param wall 障碍物  需要检测的矩形
+	 */
+	public void checkDead(Rect wall)
+	{
+		if (role.middle < wall.top)
+		{
+			if (role.rect.left <= wall.left)
+			{
+				argb = role.pic.getPixel(role.Width - (role.rect.right - wall.left),
+						role.Height - (role.rect.bottom - wall.top));
+			} else if (role.rect.left > wall.left && role.rect.right < wall.right)
 			{
 				Dead = true;
+				Pause = true;
+				return;
+			} else
+			{
+				argb = role.pic.getPixel(wall.right - role.rect.left, wall.top - role.rect.top);
 			}
+		} else if (role.middle > wall.top && role.middle < wall.bottom)
+		{
+			// 只要检测到矩形相交，在role的middle属于本种情况就Dead
+			Dead = true;
+			Pause = true;
+			return;
+
+		} else if (role.middle > wall.bottom)
+		{
+			if (role.rect.left <= wall.left)
+			{
+				argb = role.pic.getPixel(role.Width - (role.rect.right - wall.left),
+						wall.bottom - role.rect.top);
+			} else if (role.rect.left > wall.left && role.rect.right < wall.right)
+			{
+				Dead = true;
+				Pause = true;
+				return;
+			} else
+			{
+				argb = role.pic.getPixel(wall.right - role.rect.left, wall.bottom - role.rect.top);
+			}
+		}
+		//
+
+		if (argb != 0) // 检测wall左上角对应在forg图片内的像素值，不为0，即碰撞
+		{
+			Dead = true;
+			Pause = true;
 		}
 	}
 
 	private boolean isCollsion(Rect role, Rect wall)
 	{
-		if (wall.top < role.top && wall.bottom < role.top)
+		// if (wall.top < role.top && wall.bottom < role.top)
+		// {
+		//
+		// } else if (wall.left < role.left && wall.right < role.left)
+		// {
+		//
+		// } else if (wall.left > role.left && wall.left > role.right)
+		// {
+		//
+		// } else if (wall.top + 2 > role.bottom && wall.top + 2 > role.top)
+		if (wall.top > role.bottom)
 		{
-
-		} else if (wall.left < role.left && wall.right < role.left)
+		} else if (wall.right < role.left)
 		{
-
-		} else if (wall.left > role.left && wall.left > role.right)
+		} else if (wall.left > role.right)
 		{
-
-		} else if (wall.top + 2 > role.top && wall.top + 2 > role.bottom)
+		} else if (wall.bottom < role.top)
 		{
 
 		} else
 		{
-			Dead = true;
+			// Dead = true;
 			return true;
 		}
 		argb = 0;
 		return false;
 	}
+
+	@Override
+	public void surfaceCreated(SurfaceHolder holder)
+	{
+
+		screenW = this.getWidth();
+		screenH = this.getHeight();
+
+		SCREENRECT = new Rect(0, 0, screenW, screenH);
+		rect.left = 0;
+		rect.top = 0;
+		rect.right = screenW;
+		rect.bottom = Bgmap[0].getHeight();
+		
+
+		wall = new Wall(context);
+		role = new Role(context);
+		menu = new GameMenu(context);
+		
+		new Thread(this).start();
+	}
+
+	@Override
+	public void surfaceChanged(SurfaceHolder holder, int format, int width, int height)
+	{
+
+	}
+
+	@Override
+	public void surfaceDestroyed(SurfaceHolder holder)
+	{
+
+		// Dead = true;
+		// Pause = true;
+	}
+
 }

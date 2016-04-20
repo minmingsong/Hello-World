@@ -15,11 +15,11 @@ public class MainActivity extends Activity
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
+		gameview = new GameView(this);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-		gameview = new GameView(this);
-		// setContentView(gameview);
+
 		setContentView(R.layout.activity_main);
 	}
 
@@ -36,9 +36,26 @@ public class MainActivity extends Activity
 	 * R.id.action_settings) { return true; } return
 	 * super.onOptionsItemSelected(item); }
 	 */
-	
+
 	public void start(View view)
 	{
 		this.setContentView(gameview);
+		
+		
 	}
+
+	public void exit(View view)
+	{
+		
+		this.finish();
+	}
+
+	@Override
+	protected void onPause()
+	{
+		super.onPause();
+		gameview.continuerun = true;
+	}
+	
+	
 }
