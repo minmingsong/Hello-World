@@ -40,6 +40,7 @@ public class MainActivity extends Activity
 	public void start(View view)
 	{
 		this.setContentView(gameview);
+		gameview.reset();
 		
 		
 	}
@@ -48,6 +49,10 @@ public class MainActivity extends Activity
 	{
 		
 		this.finish();
+	}
+	public void help(View view)
+	{
+		
 	}
 
 	@Override

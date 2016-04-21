@@ -75,10 +75,13 @@ public class GameView extends SurfaceView implements Callback, Runnable
 
 	public void reset()
 	{
-		this.init();
-		wall.init();
-		role.init();
-		menu.init();
+		if (Dead)
+		{
+			this.init();
+			wall = new Wall(context);
+			role = new Role(context);
+			menu = new GameMenu(context);
+		}
 	}
 
 	@Override
@@ -92,38 +95,37 @@ public class GameView extends SurfaceView implements Callback, Runnable
 		// }
 		try
 		{
-			while (true)
+			// while (true)
+			// {
+			System.out.println("正常运转!");
+			while (!Dead)
 			{
-				System.out.println("正常运转!");
-				while (!Dead)
+				while (!Pause)
 				{
-					while (!Pause)
+					if (continuerun)
 					{
-						if (continuerun)
-						{
-							continuerun = false;
-						}
-						long startTime = System.currentTimeMillis();
-						move();
-						Draw();
-						long endTime = System.currentTimeMillis();
-
-						if (endTime - startTime < T)
-						{
-							Thread.sleep(T - (endTime - startTime));
-						}
+						continuerun = false;
 					}
-					// Draw();
-				}
+					long startTime = System.currentTimeMillis();
+					move();
+					Draw();
+					long endTime = System.currentTimeMillis();
 
-				Draw();
-				// reset();
-				if (continuerun)
-				{
-					reset();
+					if (endTime - startTime < T)
+					{
+						Thread.sleep(T - (endTime - startTime));
+					}
 				}
-				Thread.sleep(500);
 			}
+
+			Draw();
+			// reset();
+			// if (continuerun)
+			// {
+			// reset();
+			// }
+			Thread.sleep(500);
+			// }
 		} catch (InterruptedException e)
 		{
 			// e.printStackTrace();
@@ -191,24 +193,26 @@ public class GameView extends SurfaceView implements Callback, Runnable
 
 			if (canvas != null)
 			{
-//				switch (changebg)
-//				{
-//					case NO:
-//
-//						canvas.drawBitmap(Bgmap[0], 0, rect.top, paint);
-//						canvas.drawBitmap(Bgmap[1], 0, rect.top + Bgmap[0].getHeight(), paint);
-//						break;
-//
-//					case YES:
-//
-//						canvas.drawBitmap(Bgmap[1], 0, rect.top, paint);
-//						canvas.drawBitmap(Bgmap[1], 0, rect.top + Bgmap[1].getHeight(), paint);
-//						// canvas.drawBitmap(Bgmap[1], null, SCREENRECT, paint);
-//						break;
-//					default:
-//						break;
-//				}
-				
+				// switch (changebg)
+				// {
+				// case NO:
+				//
+				// canvas.drawBitmap(Bgmap[0], 0, rect.top, paint);
+				// canvas.drawBitmap(Bgmap[1], 0, rect.top +
+				// Bgmap[0].getHeight(), paint);
+				// break;
+				//
+				// case YES:
+				//
+				// canvas.drawBitmap(Bgmap[1], 0, rect.top, paint);
+				// canvas.drawBitmap(Bgmap[1], 0, rect.top +
+				// Bgmap[1].getHeight(), paint);
+				// // canvas.drawBitmap(Bgmap[1], null, SCREENRECT, paint);
+				// break;
+				// default:
+				// break;
+				// }
+
 				canvas.drawBitmap(Bgmap[1], null, SCREENRECT, paint);
 				if (!Dead && !Pause)
 				{
@@ -229,7 +233,10 @@ public class GameView extends SurfaceView implements Callback, Runnable
 				sh.unlockCanvasAndPost(canvas);
 			}
 		}
-//		checkdead();
+		if (!Dead)
+		{
+			checkdead();
+		}
 	}
 
 	private void move()
@@ -290,7 +297,7 @@ public class GameView extends SurfaceView implements Callback, Runnable
 			{
 				argb = role.pic.getPixel(role.Width - (role.rect.right - wall.left),
 						role.Height - (role.rect.bottom - wall.top));
-			} else if (role.rect.left > wall.left && role.rect.right < wall.right)
+			} else if (role.rect.left > wall.left && role.rect.right <= wall.right)
 			{
 				Dead = true;
 				Pause = true;
