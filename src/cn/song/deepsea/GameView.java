@@ -19,7 +19,7 @@ public class GameView extends SurfaceView implements Callback, Runnable
 	private final String tag = "GameView";
 	private Context context;
 	public static int speed = 10;
-	private static int T = 40; //画面的更新周期
+	private static int T = 50; // 画面的更新周期
 
 	public static int screenH;
 	public static int screenW;
@@ -30,16 +30,14 @@ public class GameView extends SurfaceView implements Callback, Runnable
 	private Bitmap[] Bgmap = new Bitmap[2];
 	private int argb = 0;
 
-	Rect rect;				//Bgmap的矩形
-	Rect SCREENRECT;		//屏幕的矩形
-	int tochX = 0;			//触摸点的X值
+	Rect rect; // Bgmap的矩形
+	Rect SCREENRECT; // 屏幕的矩形
+	int tochX = 0; // 触摸点的X值
 	public static boolean touched = false;
 
 	private Wall wall;
 	private Role role;
 	private GameMenu menu;
-
-	
 
 	public static boolean Dead = false;
 	public static boolean Pause = false;
@@ -193,24 +191,25 @@ public class GameView extends SurfaceView implements Callback, Runnable
 
 			if (canvas != null)
 			{
-				switch (changebg)
-				{
-					case NO:
-
-						canvas.drawBitmap(Bgmap[0], 0, rect.top, paint);
-						canvas.drawBitmap(Bgmap[1], 0, rect.top + Bgmap[0].getHeight(), paint);
-						break;
-
-					case YES:
-
-						// canvas.drawBitmap(Bgmap[1], 0, rect.top, paint);
-						// canvas.drawBitmap(Bgmap[1], 0, rect.top +
-						// Bgmap[1].getHeight(), paint);
-						canvas.drawBitmap(Bgmap[1], null, SCREENRECT, paint);
-						break;
-					default:
-						break;
-				}
+//				switch (changebg)
+//				{
+//					case NO:
+//
+//						canvas.drawBitmap(Bgmap[0], 0, rect.top, paint);
+//						canvas.drawBitmap(Bgmap[1], 0, rect.top + Bgmap[0].getHeight(), paint);
+//						break;
+//
+//					case YES:
+//
+//						canvas.drawBitmap(Bgmap[1], 0, rect.top, paint);
+//						canvas.drawBitmap(Bgmap[1], 0, rect.top + Bgmap[1].getHeight(), paint);
+//						// canvas.drawBitmap(Bgmap[1], null, SCREENRECT, paint);
+//						break;
+//					default:
+//						break;
+//				}
+				
+				canvas.drawBitmap(Bgmap[1], null, SCREENRECT, paint);
 				if (!Dead && !Pause)
 				{
 					wall.move();
@@ -230,7 +229,7 @@ public class GameView extends SurfaceView implements Callback, Runnable
 				sh.unlockCanvasAndPost(canvas);
 			}
 		}
-		checkdead();
+//		checkdead();
 	}
 
 	private void move()
@@ -245,35 +244,43 @@ public class GameView extends SurfaceView implements Callback, Runnable
 				changebg = CHANGE.YES; // 第一张图片超出屏幕之后就改为只画第二张
 			}
 		}
-		else {
-			SCREENRECT.top = 0;
-			SCREENRECT.left = 0;
-			SCREENRECT.bottom = SCREENRECT.top + this.getHeight();
-		}
 
 	}
 
 	private void checkdead()
 	{
 
-		
 		if (wall.tempRect.flag == WallRect.DL)
 		{
-			if (isCollsion(role.rect, wall.tempRect.rectl)) {
-				
+			if (isCollsion(role.rect, wall.tempRect.rectl))
+			{
+				checkDead(wall.tempRect.rectl);
+			}
+		} else if (wall.tempRect.flag == WallRect.DR)
+		{
+			if (isCollsion(role.rect, wall.tempRect.rectr))
+			{
+				checkDead(wall.tempRect.rectr);
+			}
+		} else
+		{
+			if (isCollsion(role.rect, wall.tempRect.rectl))
+			{
+				checkDead(wall.tempRect.rectl);
+			} else
+			{
+				if (isCollsion(role.rect, wall.tempRect.rectr))
+				{
+					checkDead(wall.tempRect.rectr);
+				}
 			}
 		}
-		
-		
-		if (isCollsion(role.rect, wall.tempRect.rectl))
-		{
-			
-			checkDead(wall.tempRect.rectl);
-		}
+
 	}
 
 	/**
-	 * @param wall 障碍物  需要检测的矩形
+	 * @param wall
+	 *            障碍物 需要检测的矩形
 	 */
 	public void checkDead(Rect wall)
 	{
@@ -303,8 +310,7 @@ public class GameView extends SurfaceView implements Callback, Runnable
 		{
 			if (role.rect.left <= wall.left)
 			{
-				argb = role.pic.getPixel(role.Width - (role.rect.right - wall.left),
-						wall.bottom - role.rect.top);
+				argb = role.pic.getPixel(role.Width - (role.rect.right - wall.left), wall.bottom - role.rect.top);
 			} else if (role.rect.left > wall.left && role.rect.right < wall.right)
 			{
 				Dead = true;
@@ -366,12 +372,11 @@ public class GameView extends SurfaceView implements Callback, Runnable
 		rect.top = 0;
 		rect.right = screenW;
 		rect.bottom = Bgmap[0].getHeight();
-		
 
 		wall = new Wall(context);
 		role = new Role(context);
 		menu = new GameMenu(context);
-		
+
 		new Thread(this).start();
 	}
 
